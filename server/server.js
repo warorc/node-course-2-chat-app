@@ -1,14 +1,37 @@
 const path = require('path');
-const publicPath = path.join(__dirname, '../public');
+const http = require('http');
 const express = require('express');
+const socketIO = require('socket.io');
+
+const publicPath = path.join(__dirname, '../public');
 const bodyParser = require('body-parser');
 
-const app = express();
 const port = process.env.PORT || 3000;
+const app = express();
+var server = http.createServer(app);
+var io = socketIO(server);
 
 app.use(express.static(publicPath));
 
-app.listen(port, () => {
+io.on('connection', (socket) => {
+  console.log('New User Connected');
+
+  socket.on('createMessage', (message) => {
+    console.log('Message: ', message)
+    io.emit('newMessage', {
+      from: message.from,
+      text: message.text,
+      createdAt: new Date().getTime()
+    });
+  })
+  
+  socket.on('disconnect', () => {
+    console.log('Client was disconnected');
+  })
+  
+});
+
+server.listen(port, () => {
   console.log(`Server started on port ${port}`);
 });
 // console.log(__dirname + '\\..\\public');
